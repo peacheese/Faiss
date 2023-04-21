@@ -1,3 +1,4 @@
+import sys
 import time
 import faiss
 import numpy as np
@@ -5,8 +6,9 @@ import numpy as np
 if __name__ == '__main__':
     
     dim = 128
-    x = int(input('Corpus size = '))
-    k = int(input('K = '))
+    x = int(sys.argv[1])
+    k = int(sys.argv[2])
+    print('{}M items, K = {}'.format(x, k))
     total_num = x * 1024000
 
     ngpus = faiss.get_num_gpus()
