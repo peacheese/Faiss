@@ -8,26 +8,24 @@ if __name__ == '__main__':
     dim = 128
     x = int(sys.argv[1])
     k = int(sys.argv[2])
-    print('{}M items, K = {}'.format(x, k))
+    lsh_k = int(sys.argv[3])
+    print('{}M items, Top-K = {}, LSH-K = {}'.format(x, k, lsh_k))
     total_num = x * 1024000
 
-    gpu_res = faiss.StandardGpuResources()
+    ngpus = faiss.get_num_gpus()
+    print("{} GPUs:".format(ngpus))
 
     np.random.seed(1234)
     corpus = np.random.randint(0, 256, (total_num, dim)).astype('float32')
     query  = np.random.randint(0, 256, (1, dim)).astype('float32')
 
-    # index = faiss.IndexLSH(dim, dim)
-    measure = faiss.METRIC_INNER_PRODUCT
-    param =  'HNSW64' 
-    index = faiss.index_factory(dim, param, measure)  
-    print(index.is_trained)
-    # gpu_index = faiss.index_cpu_to_gpu(gpu_res, 0, index)
-    # print('convert over')
-    index.add(corpus)
-    # print('add over')
+    index = faiss.IndexLSH(dim, lsh_k)
+    gpu_index = faiss.index_cpu_to_all_gpus(index)
+
+    gpu_index.add(corpus)
+
     start_time = time.time()
-    distance, idx = index.search(query, k)
+    distance, idx = gpu_index.search(query, k)
     end_time = time.time()
     run_time = end_time - start_time
     print('Running time : ' + str(run_time) + 's')
